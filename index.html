@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  >
+
+  <title>A&O Barcode Scanner</title>
+
+  <script
+    src="https://unpkg.com/html5-qrcode"
+  ></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px 15px;
+      background: #f8f3f6;
+      font-family: Arial, sans-serif;
+      color: #222;
+    }
+
+    .scanner-card {
+      width: 100%;
+      max-width: 650px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow:
+        0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 32px;
+    }
+
+    #modeLabel {
+      text-align: center;
+      margin-top: 10px;
+      margin-bottom: 25px;
+      color: #a63c72;
+      font-weight: bold;
+      font-size: 21px;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 330px;
+      background: #111;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    #status {
+      margin-top: 18px;
+      padding: 16px;
+      text-align: center;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: bold;
+      background: #eeeeee;
+    }
+
+    #status.success {
+      background: #dff3e4;
+      color: #216b37;
+    }
+
+    #status.error {
+      background: #ffdcdc;
+      color: #922525;
+    }
+
+    .divider {
+      margin: 22px 0;
+      border-top: 1px solid #ddd;
+    }
+
+    input {
+      width: 100%;
+      padding: 17px;
+      font-size: 18px;
+      border: 1px solid #aaa;
+      border-radius: 12px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 17px;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #b3467d;
+      color: white;
+    }
+
+    .secondary {
+      background: #ded4ee;
+      color: #222;
+    }
+
+    .small-note {
+      margin-top: 15px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+
+    iframe {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="scanner-card">
+
+    <h1>A&O Barcode Scanner</h1>
+
+    <div id="modeLabel">
+      SCANNER MODE
+    </div>
+
+    <div id="reader"></div>
+
+    <div id="status">
+      Starting camera...
+    </div>
+
+    <div class="divider"></div>
+
+    <input
+      id="manualBarcode"
+      type="text"
+      inputmode="numeric"
+      placeholder="Or enter barcode manually"
+    >
+
+    <button
+      class="primary"
+      onclick="submitManualBarcode()"
+    >
+      SUBMIT BARCODE
+    </button>
+
+    <button
+      class="secondary"
+      onclick="restartScanner()"
+    >
+      RESTART CAMERA
+    </button>
+
+    <div class="small-note">
+      Allow camera access when prompted.
+    </div>
+
+  </div>
+
+
+  <iframe
+    id="backendFrame"
+    name="backendFrame"
+  ></iframe>
+
+
+  <script>
+
+    const BACKEND_URL =
+      'https://script.google.com/macros/s/AKfycbyOvyqEK2Ny1tfQ_slvmOvF0if4GviwN4sHZPNLAQZ8C0XiL_hbw24yc_jlSyRVycIM/exec';
+
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const MODE =
+      (
+        params.get('mode') ||
+        'sales'
+      )
+      .toLowerCase();
+
+
+    const modeLabel =
+      document.getElementById(
+        'modeLabel'
+      );
+
+    const statusBox =
+      document.getElementById(
+        'status'
+      );
+
+
+    if (MODE === 'newproduct') {
+
+      modeLabel.textContent =
+        'NEW PRODUCT MODE';
+
+    } else if (MODE === 'restock') {
+
+      modeLabel.textContent =
+        'RESTOCK MODE';
+
+    } else {
+
+      modeLabel.textContent =
+        'SALES MODE';
+
+    }
+
+
+    let scanner = null;
+    let scannerRunning = false;
+    let processing = false;
+
+
+    function setStatus(
+      message,
+      type
+    ) {
+
+      statusBox.textContent =
+        message;
+
+      statusBox.classList.remove(
+        'success',
+        'error'
+      );
+
+      if (type) {
+        statusBox.classList.add(
+          type
+        );
+      }
+    }
+
+
+    function startScanner() {
+
+      processing = false;
+
+      setStatus(
+        'Requesting camera access...'
+      );
+
+      scanner =
+        new Html5Qrcode(
+          'reader'
+        );
+
+
+      Html5Qrcode
+        .getCameras()
+
+        .then(function(devices) {
+
+          if (
+            !devices ||
+            devices.length === 0
+          ) {
+            throw new Error(
+              'No camera detected.'
+            );
+          }
+
+
+          let selectedCamera =
+            devices[0];
+
+
+          const rearCamera =
+            devices.find(
+              function(device) {
+
+                const label =
+                  String(
+                    device.label || ''
+                  ).toLowerCase();
+
+                return (
+                  label.includes('back') ||
+                  label.includes('rear') ||
+                  label.includes(
+                    'environment'
+                  )
+                );
+              }
+            );
+
+
+          if (rearCamera) {
+            selectedCamera =
+              rearCamera;
+          }
+
+
+          const config = {
+
+            fps: 10,
+
+            qrbox: function(
+              width,
+              height
+            ) {
+
+              return {
+                width:
+                  Math.floor(
+                    width * 0.85
+                  ),
+
+                height:
+                  Math.floor(
+                    height * 0.35
+                  )
+              };
+            }
+          };
+
+
+          return scanner.start(
+
+            selectedCamera.id,
+
+            config,
+
+            function(decodedText) {
+
+              handleBarcode(
+                decodedText
+              );
+            },
+
+            function() {
+              // Normal scan misses ignored.
+            }
+
+          );
+        })
+
+        .then(function() {
+
+          scannerRunning = true;
+
+          setStatus(
+            'Camera ready. Scan a barcode.',
+            'success'
+          );
+        })
+
+        .catch(function(error) {
+
+          scannerRunning = false;
+
+          const message =
+            error &&
+            error.message
+              ? error.message
+              : String(error);
+
+          setStatus(
+            'Camera error: ' +
+            message,
+            'error'
+          );
+
+          console.error(error);
+        });
+    }
+
+
+    function stopScanner() {
+
+      if (
+        !scanner ||
+        !scannerRunning
+      ) {
+        return Promise.resolve();
+      }
+
+      return scanner
+        .stop()
+
+        .then(function() {
+
+          scannerRunning = false;
+        })
+
+        .catch(function() {
+
+          scannerRunning = false;
+        });
+    }
+
+
+    function restartScanner() {
+
+      processing = false;
+
+      stopScanner()
+        .then(function() {
+
+          document.getElementById(
+            'reader'
+          ).innerHTML = '';
+
+          startScanner();
+        });
+    }
+
+
+    function handleBarcode(
+      barcode
+    ) {
+
+      if (processing) {
+        return;
+      }
+
+
+      const cleanBarcode =
+        String(
+          barcode || ''
+        ).trim();
+
+
+      if (!cleanBarcode) {
+        return;
+      }
+
+
+      processing = true;
+
+
+      setStatus(
+        'Barcode detected: ' +
+        cleanBarcode +
+        '. Sending...',
+        'success'
+      );
+
+
+      stopScanner()
+        .then(function() {
+
+          sendToInventory(
+            cleanBarcode
+          );
+        });
+    }
+
+
+    function sendToInventory(
+      barcode
+    ) {
+
+      const url =
+        BACKEND_URL +
+        '?action=scan' +
+        '&mode=' +
+        encodeURIComponent(MODE) +
+        '&barcode=' +
+        encodeURIComponent(
+          barcode
+        ) +
+        '&t=' +
+        Date.now();
+
+
+      document.getElementById(
+        'backendFrame'
+      ).src = url;
+
+
+      setStatus(
+        'Barcode sent to A&O Inventory.',
+        'success'
+      );
+
+
+      setTimeout(
+        function() {
+          restartScanner();
+        },
+        1800
+      );
+    }
+
+
+    function submitManualBarcode() {
+
+      const input =
+        document.getElementById(
+          'manualBarcode'
+        );
+
+
+      const barcode =
+        String(
+          input.value || ''
+        ).trim();
+
+
+      if (!barcode) {
+
+        setStatus(
+          'Enter a barcode first.',
+          'error'
+        );
+
+        return;
+      }
+
+
+      input.value = '';
+
+      handleBarcode(
+        barcode
+      );
+    }
+
+
+    window.addEventListener(
+      'load',
+      function() {
+
+        startScanner();
+      }
+    );
+
+  </script>
+
+</body>
+</html>
