@@ -173,18 +173,15 @@
 
   </div>
 
-
   <iframe
     id="backendFrame"
     name="backendFrame"
   ></iframe>
 
-
   <script>
 
     const BACKEND_URL =
       'https://script.google.com/macros/s/AKfycbyOvyqEK2Ny1tfQ_slvmOvF0if4GviwN4sHZPNLAQZ8C0XiL_hbw24yc_jlSyRVycIM/exec';
-
 
     const params =
       new URLSearchParams(
@@ -198,7 +195,6 @@
       )
       .toLowerCase();
 
-
     const modeLabel =
       document.getElementById(
         'modeLabel'
@@ -209,29 +205,22 @@
         'status'
       );
 
-
     if (MODE === 'newproduct') {
-
       modeLabel.textContent =
         'NEW PRODUCT MODE';
 
     } else if (MODE === 'restock') {
-
       modeLabel.textContent =
         'RESTOCK MODE';
 
     } else {
-
       modeLabel.textContent =
         'SALES MODE';
-
     }
-
 
     let scanner = null;
     let scannerRunning = false;
     let processing = false;
-
 
     function setStatus(
       message,
@@ -253,10 +242,13 @@
       }
     }
 
-
     function startScanner() {
 
       processing = false;
+
+      if (scannerRunning) {
+        return;
+      }
 
       setStatus(
         'Requesting camera access...'
@@ -266,7 +258,6 @@
         new Html5Qrcode(
           'reader'
         );
-
 
       Html5Qrcode
         .getCameras()
@@ -282,10 +273,8 @@
             );
           }
 
-
           let selectedCamera =
             devices[0];
-
 
           const rearCamera =
             devices.find(
@@ -299,22 +288,17 @@
                 return (
                   label.includes('back') ||
                   label.includes('rear') ||
-                  label.includes(
-                    'environment'
-                  )
+                  label.includes('environment')
                 );
               }
             );
-
 
           if (rearCamera) {
             selectedCamera =
               rearCamera;
           }
 
-
           const config = {
-
             fps: 10,
 
             qrbox: function(
@@ -336,15 +320,11 @@
             }
           };
 
-
           return scanner.start(
-
             selectedCamera.id,
-
             config,
 
             function(decodedText) {
-
               handleBarcode(
                 decodedText
               );
@@ -353,7 +333,6 @@
             function() {
               // Normal scan misses ignored.
             }
-
           );
         })
 
@@ -387,7 +366,6 @@
         });
     }
 
-
     function stopScanner() {
 
       if (
@@ -401,16 +379,13 @@
         .stop()
 
         .then(function() {
-
           scannerRunning = false;
         })
 
         .catch(function() {
-
           scannerRunning = false;
         });
     }
-
 
     function restartScanner() {
 
@@ -427,7 +402,6 @@
         });
     }
 
-
     function handleBarcode(
       barcode
     ) {
@@ -436,20 +410,16 @@
         return;
       }
 
-
       const cleanBarcode =
         String(
           barcode || ''
         ).trim();
 
-
       if (!cleanBarcode) {
         return;
       }
 
-
       processing = true;
-
 
       setStatus(
         'Barcode detected: ' +
@@ -458,16 +428,10 @@
         'success'
       );
 
-
-      stopScanner()
-        .then(function() {
-
-          sendToInventory(
-            cleanBarcode
-          );
-        });
+      sendToInventory(
+        cleanBarcode
+      );
     }
-
 
     function sendToInventory(
       barcode
@@ -485,26 +449,29 @@
         '&t=' +
         Date.now();
 
-
       document.getElementById(
         'backendFrame'
       ).src = url;
-
 
       setStatus(
         'Barcode sent to A&O Inventory.',
         'success'
       );
 
-
       setTimeout(
         function() {
-          restartScanner();
+
+          processing = false;
+
+          setStatus(
+            'Camera ready. Scan a barcode.',
+            'success'
+          );
+
         },
         1800
       );
     }
-
 
     function submitManualBarcode() {
 
@@ -513,12 +480,10 @@
           'manualBarcode'
         );
 
-
       const barcode =
         String(
           input.value || ''
         ).trim();
-
 
       if (!barcode) {
 
@@ -530,7 +495,6 @@
         return;
       }
 
-
       input.value = '';
 
       handleBarcode(
@@ -538,11 +502,9 @@
       );
     }
 
-
     window.addEventListener(
       'load',
       function() {
-
         startScanner();
       }
     );
