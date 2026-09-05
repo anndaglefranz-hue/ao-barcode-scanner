@@ -428,6 +428,31 @@
         'success'
       );
 
+      const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+const returnUrl =
+  params.get('returnUrl');
+
+if (returnUrl) {
+  const separator =
+    returnUrl.includes('?')
+      ? '&'
+      : '?';
+
+  window.location.href =
+    returnUrl +
+    separator +
+    'barcode=' +
+    encodeURIComponent(
+      cleanBarcode
+    );
+
+  return;
+}
+
       sendToInventory(
         cleanBarcode
       );
