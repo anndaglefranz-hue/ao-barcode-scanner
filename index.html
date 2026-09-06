@@ -198,6 +198,35 @@
       )
       .toLowerCase();
 
+const returnUrl =
+  params.get('returnUrl');
+
+const backLink =
+  document.getElementById(
+    'backLink'
+  );
+
+if (backLink) {
+
+  if (returnUrl) {
+    backLink.href =
+      returnUrl;
+  }
+
+  if (MODE === 'newproduct') {
+    backLink.textContent =
+      'BACK TO NEW PRODUCT';
+
+  } else if (MODE === 'restock') {
+    backLink.textContent =
+      'BACK TO RESTOCK';
+
+  } else {
+    backLink.textContent =
+      'BACK TO MOBILE SALES';
+  }
+}
+    
     const modeLabel =
       document.getElementById(
         'modeLabel'
