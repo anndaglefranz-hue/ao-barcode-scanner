@@ -436,6 +436,9 @@
     window.location.search
   );
 
+const returnUrl =
+  params.get('returnUrl');
+      
 if (returnUrl) {
   const separator =
     returnUrl.includes('?')
