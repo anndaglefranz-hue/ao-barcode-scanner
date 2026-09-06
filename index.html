@@ -144,13 +144,24 @@
       Starting camera...
     </div>
 
-    <button
-  class="secondary"
-  type="button"
-  onclick="goBackToMobileSales()"
+    <a
+  href="https://script.google.com/macros/s/AKfycbxkyFXE50G9rzo6Rb4kZJByDdHvLyWpre2-Q01cogyAZnvJZdcyICrVofnJxpyrT7AKHw/exec?page=mobile-sales"
+  style="
+    display:block;
+    width:100%;
+    margin-top:10px;
+    padding:14px;
+    border-radius:10px;
+    background:#ded5ef;
+    color:#222;
+    text-align:center;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:16px;
+  "
 >
   BACK TO MOBILE SALES
-</button>
+</a>
 
     <button
       class="secondary"
@@ -489,25 +500,6 @@ if (returnUrl) {
         1800
       );
     }
-
-function goBackToMobileSales() {
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-  const returnUrl =
-    params.get('returnUrl');
-
-  if (returnUrl) {
-    window.location.href =
-      returnUrl;
-    return;
-  }
-
-  window.location.href =
-    'https://script.google.com/macros/s/AKfycbxkyFXE50G9rzo6Rb4kZJByDdHvLyWpre2-Q01cogyAZnvJZdcyICrVofnJxpyrT7AKHw/exec?page=mobile-sales';
-}
     
     window.addEventListener(
       'load',
