@@ -482,35 +482,6 @@ if (returnUrl) {
       );
     }
 
-    function submitManualBarcode() {
-
-      const input =
-        document.getElementById(
-          'manualBarcode'
-        );
-
-      const barcode =
-        String(
-          input.value || ''
-        ).trim();
-
-      if (!barcode) {
-
-        setStatus(
-          'Enter a barcode first.',
-          'error'
-        );
-
-        return;
-      }
-
-      input.value = '';
-
-      handleBarcode(
-        barcode
-      );
-    }
-
     window.addEventListener(
       'load',
       function() {
