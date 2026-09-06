@@ -197,10 +197,7 @@
         'sales'
       )
       .toLowerCase();
-
-const returnUrl =
-  params.get('returnUrl');
-
+    
 const backLink =
   document.getElementById(
     'backLink'
@@ -208,22 +205,29 @@ const backLink =
 
 if (backLink) {
 
-  if (returnUrl) {
-    backLink.href =
-      returnUrl;
-  }
-
   if (MODE === 'newproduct') {
+
     backLink.textContent =
       'BACK TO NEW PRODUCT';
 
+    backLink.href =
+      'https://script.google.com/macros/s/AKfycbxkyFXE50G9rzo6Rb4kZJByDdHvLyWpre2-Q01cogyAZnvJZdcyICrVofnJxpyrT7AKHw/exec?page=mobile-new-product';
+
   } else if (MODE === 'restock') {
+
     backLink.textContent =
       'BACK TO RESTOCK';
 
+    backLink.href =
+      'https://script.google.com/macros/s/AKfycbxkyFXE50G9rzo6Rb4kZJByDdHvLyWpre2-Q01cogyAZnvJZdcyICrVofnJxpyrT7AKHw/exec?page=mobile-restock';
+
   } else {
+
     backLink.textContent =
       'BACK TO MOBILE SALES';
+
+    backLink.href =
+      'https://script.google.com/macros/s/AKfycbxkyFXE50G9rzo6Rb4kZJByDdHvLyWpre2-Q01cogyAZnvJZdcyICrVofnJxpyrT7AKHw/exec?page=mobile-sales';
   }
 }
     
